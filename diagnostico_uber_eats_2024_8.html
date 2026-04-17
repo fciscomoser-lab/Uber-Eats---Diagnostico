@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Uber Eats — South East 2024</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--black:#0a0a0a;--white:#fafafa;--g50:#f5f5f3;--g100:#e8e8e4;--g300:#b4b4ae;--g500:#6b6b65;--g700:#3a3a36;--blue:#1a56db;--bl:#e8f0fe;--green:#0d9e6e;--gl:#e6f7f2;--red:#d63a2f;--rl:#fcecea;--amber:#b45309;--al:#fef3e2;--r:6px;--rl2:10px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--black);font-size:14px;line-height:1.6}
+.hdr{background:var(--black);color:var(--white);padding:28px 48px 24px;position:sticky;top:0;z-index:100;border-bottom:1px solid #1a1a1a}
+.hdr h1{font-size:17px;font-weight:500;letter-spacing:-.02em;margin-bottom:3px}
+.hdr .sub{font-size:11px;color:#999;font-family:'DM Mono',monospace}
+.tag{display:inline-block;background:#1a1a1a;border:1px solid #2a2a2a;color:#888;font-size:11px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:3px;margin-left:8px}
+.nav{background:var(--white);border-bottom:1px solid var(--g100);padding:0 48px;display:flex;gap:0;overflow-x:auto;position:sticky;top:73px;z-index:99;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.ng{display:flex;align-items:center;gap:2px;padding:8px 0}
+.ng+.ng{margin-left:12px;padding-left:12px;border-left:1px solid var(--g100)}
+.nlbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--g300);text-transform:uppercase;letter-spacing:.08em;padding:0 6px 0 2px;white-space:nowrap}
+.nb{font-family:'DM Sans',sans-serif;font-size:11.5px;padding:4px 10px;border:1px solid transparent;border-radius:var(--r);background:transparent;color:var(--g500);cursor:pointer;white-space:nowrap;transition:all .12s}
+.nb:hover{background:var(--g50);color:var(--black)}
+.nb.active{background:var(--black);color:var(--white);border-color:var(--black)}
+.main{padding:28px 48px 64px;max-width:1200px}
+.sec{display:none}.sec.active{display:block}
+.cnote{display:flex;align-items:center;gap:8px;background:var(--g50);border:1px solid var(--g100);border-radius:var(--r);padding:7px 12px;margin-bottom:22px;font-size:11px;font-family:'DM Mono',monospace;color:var(--g500)}
+.cnote::before{content:'◆';font-size:8px;color:var(--g300)}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:24px}
+.kpi{background:var(--g50);border:1px solid var(--g100);border-radius:var(--rl2);padding:12px 14px}
+.kpi .lbl{font-size:10.5px;color:var(--g500);font-family:'DM Mono',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.kpi .val{font-size:20px;font-weight:500;letter-spacing:-.03em;line-height:1.1;margin-bottom:3px}
+.kpi .dlta{font-size:11px;font-family:'DM Mono',monospace}
+.up{color:var(--green)}.dn{color:var(--red)}.wn{color:var(--amber)}.mu{color:var(--g500)}
+.stitle{font-size:10.5px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--g300);margin:24px 0 8px;display:flex;align-items:center;gap:8px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--g100)}
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.cw{position:relative;width:100%;margin-bottom:18px}
+.leg{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:6px;font-size:11px;color:var(--g500)}
+.leg span{display:flex;align-items:center;gap:5px}
+.ld{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.ins{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px}
+.in{border-left:2px solid var(--blue);background:var(--bl);padding:9px 13px;border-radius:0 var(--r) var(--r) 0;font-size:12.5px;line-height:1.5}
+.in.w{border-left-color:var(--amber);background:var(--al)}
+.in.g{border-left-color:var(--green);background:var(--gl)}
+.in.a{border-left-color:var(--red);background:var(--rl)}
+.in.full{grid-column:1/-1}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:16px}
+.tbl th{background:var(--g50);border:1px solid var(--g100);padding:7px 10px;text-align:left;font-weight:500;font-family:'DM Mono',monospace;font-size:11px;color:var(--g500)}
+.tbl td{border:1px solid var(--g100);padding:7px 10px;vertical-align:top}
+.tbl tr:hover td{background:var(--g50)}
+.badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-family:'DM Mono',monospace;font-weight:500}
+.badge-g{background:var(--gl);color:var(--green)}
+.badge-r{background:var(--rl);color:var(--red)}
+.badge-a{background:var(--al);color:var(--amber)}
+.badge-b{background:var(--bl);color:var(--blue)}
+.funnel{display:flex;flex-direction:column;gap:6px;margin:16px 0}
+.fstep{display:flex;align-items:center;gap:12px}
+.fbar{background:var(--blue);height:36px;border-radius:var(--r);display:flex;align-items:center;padding:0 12px;color:white;font-size:12px;font-weight:500;font-family:'DM Mono',monospace;transition:width .3s;min-width:120px}
+.fmeta{font-size:11.5px;color:var(--g500);white-space:nowrap}
+.fmeta b{color:var(--black)}
+@media(max-width:768px){.hdr{padding:20px}.nav{padding:0 16px}.main{padding:16px 16px 48px}.crow{grid-template-columns:1fr}.ins{grid-template-columns:1fr}.kgrid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>Diagnóstico Uber Eats — South East GBA<span class="tag">9.437 rests · 2024</span><span class="tag">MCR/ROR/Rating ponderados por trips</span></h1>
+  <div class="sub">69.084 registros · Unmanaged 100% · muestra representativa × 3.7 → ~35.000 cuentas nacionales</div>
+</div>
+
+<div class="nav">
+  <div class="ng">
+    <span class="nlbl">Base</span>
+    <button class="nb active" onclick="show('macro',this)">Macro</button>
+    <button class="nb" onclick="show('zona',this)">Zona</button>
+    <button class="nb" onclick="show('lc',this)">Lifecycle</button>
+    <button class="nb" onclick="show('mon',this)">Monetización</button>
+    <button class="nb" onclick="show('ops',this)">Ops MCR</button>
+    <button class="nb" onclick="show('cal',this)">Calidad</button>
+    <button class="nb" onclick="show('fun',this)">Funnel</button>
+    <button class="nb" onclick="show('tec',this)">Tecnología</button>
+  </div>
+  <div class="ng">
+    <span class="nlbl">Avanzado</span>
+    <button class="nb" onclick="show('org',this)">Org/Inorg</button>
+    <button class="nb" onclick="show('par',this)">Pareto</button>
+    <button class="nb" onclick="show('coh',this)">Cohort</button>
+    <button class="nb" onclick="show('corr',this)">Correlaciones</button>
+    <button class="nb" onclick="show('est',this)">Estacionalidad</button>
+    <button class="nb" onclick="show('churn',this)">Churn</button>
+    <button class="nb" onclick="show('cuis',this)">Cuisine</button>
+  </div>
+  <div class="ng">
+    <span class="nlbl">Nuevo</span>
+    <button class="nb" onclick="show('combos',this)">Combos Tech</button>
+    <button class="nb" onclick="show('monet2',this)">Ads+Offers</button>
+    <button class="nb" onclick="show('top20',this)">Top vs Bottom</button>
+    <button class="nb" onclick="show('onboard',this)">Onboarding</button>
+  </div>
+  <div class="ng">
+    <span class="nlbl">Q4 Actual</span>
+    <button class="nb" onclick="show('q3q4',this)">Q3 vs Q4</button>
+    <button class="nb" onclick="show('clusters',this)">Clusters</button>
+    <button class="nb" onclick="show('fotoq4',this)">Foto Q4</button>
+  </div>
+</div>
+
+<div class="main">
+<div class="cnote">MCR, ROR y Rating = ponderados por trips · Basket = GB total / trips totales · days_since_first_order = estático al 31/12/2024 · Offer pen = offer_trips/completed_trips</div>
+
+<!-- MACRO -->
+<div id="macro" class="sec active">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">Restaurantes</div><div class="val">9.437</div><div class="dlta mu">ene–dic 2024</div></div>
+    <div class="kpi"><div class="lbl">Gross Bookings</div><div class="val">$1.38B</div><div class="dlta up">+47.6% total portafolio</div></div>
+    <div class="kpi"><div class="lbl">Trips completados</div><div class="val">4.36M</div><div class="dlta up">+33.2% total portafolio</div></div>
+    <div class="kpi"><div class="lbl">Basket ponderado</div><div class="val">$316</div><div class="dlta up">$302→$334 (+10.8%)</div></div>
+    <div class="kpi"><div class="lbl">MCR ponderado</div><div class="val">2.3%</div><div class="dlta mu">vs 15.8% simple</div></div>
+    <div class="kpi"><div class="lbl">ROR ponderado</div><div class="val">95.9%</div><div class="dlta mu">estable</div></div>
+    <div class="kpi"><div class="lbl">Rating ponderado</div><div class="val">4.60</div><div class="dlta dn">4.64→4.54 en dic</div></div>
+    <div class="kpi"><div class="lbl">Issues / trip</div><div class="val">3.9%</div><div class="dlta dn">3.46%→4.33% en dic</div></div>
+  </div>
+  <div class="crow">
+    <div><div class="stitle">GB y Trips mensual</div><div class="leg"><span><span class="ld" style="background:var(--blue)"></span>GB ($M)</span><span><span class="ld" style="background:var(--green)"></span>Trips (K)</span></div><div class="cw" style="height:200px"><canvas id="m1"></canvas></div></div>
+    <div><div class="stitle">MCR ponderado y Rating mensual</div><div class="leg"><span><span class="ld" style="background:var(--red)"></span>MCR %</span><span><span class="ld" style="background:var(--blue)"></span>Rating</span></div><div class="cw" style="height:200px"><canvas id="m2"></canvas></div></div>
+  </div>
+  <div class="stitle">Crecimiento descompuesto — portafolio total vs same-store</div>
+  <table class="tbl">
+    <tr><th>Dimensión</th><th>Total portafolio</th><th>Same-store (3.332 rests en ene Y dic)</th><th>Contribución nuevos restaurants</th></tr>
+    <tr><td>GB ene→dic</td><td><b>+47.6%</b></td><td>+26.4%</td><td>74% del incremento</td></tr>
+    <tr><td>Trips ene→dic</td><td><b>+33.2%</b></td><td>+14.0%</td><td>96% del incremento</td></tr>
+    <tr><td>GB/rest promedio</td><td>$19.723→$25.764</td><td colspan="2"><b>+30.6% por cuenta</b></td></tr>
+    <tr><td>Trips/rest promedio</td><td>65.3→77.0</td><td colspan="2"><b>+17.9% por cuenta</b></td></tr>
+  </table>
+  <div class="ins">
+    <div class="in g">+47.6% GB total — same-store +26.4%. El 74% del incremento vino de 2.000 nuevos restaurants en el año.</div>
+    <div class="in g">GB/rest +30.6% y Trips/rest +17.9% — las cuentas existentes también crecen, no solo el portafolio.</div>
+    <div class="in">MCR ponderado 2.3% vs simple 15.8% — el problema está concentrado en bajo volumen. El 47% del portafolio (inactivos + 1–50 trips) tiene MCR 25%+ pero genera solo 1% del GB.</div>
+    <div class="in a">Rating cae en medio-alto volumen (201–1K: Δ−0.110; >1K: Δ−0.097) — los que generan el 95% del GB.</div>
+  </div>
+</div>
+
+<!-- ZONA -->
+<div id="zona" class="sec">
+  <div class="stitle">Perfil por ciudad — Q4 2024</div>
+  <table class="tbl">
+    <tr><th>Ciudad</th><th>Rests</th><th>% GB Q4</th><th>MCR pond.</th><th>Unaccept</th><th>Rating</th><th>Basket</th><th>Offers</th><th>Ads</th><th>POS</th><th>AutoAcc</th></tr>
+    <tr><td>Tigre</td><td>1.368</td><td>27.2%</td><td><span class="badge badge-g">2.00%</span></td><td>1.5%</td><td>4.543</td><td>$360</td><td>34.6%</td><td>34.2%</td><td>16.7%</td><td>0.7%</td></tr>
+    <tr><td>La Plata</td><td>1.062</td><td>19.5%</td><td><span class="badge badge-g">2.18%</span></td><td>1.6%</td><td>4.585</td><td>$314</td><td>26.6%</td><td>27.2%</td><td>4.1%</td><td>1.4%</td></tr>
+    <tr><td>Bernal</td><td>1.548</td><td>15.9%</td><td><span class="badge badge-a">2.41%</span></td><td>2.0%</td><td>4.506</td><td>$312</td><td>30.9%</td><td>25.8%</td><td>21.6%</td><td>0.7%</td></tr>
+    <tr><td>San Isidro</td><td>713</td><td>12.1%</td><td><span class="badge badge-a">2.53%</span></td><td>2.0%</td><td>4.540</td><td>$317</td><td>33.1%</td><td>29.7%</td><td>10.1%</td><td>0.6%</td></tr>
+    <tr><td>Quilmes</td><td>718</td><td>11.2%</td><td><span class="badge badge-g">2.03%</span></td><td>1.6%</td><td>4.559</td><td>$287</td><td>37.3%</td><td>34.4%</td><td>1.7%</td><td>1.9%</td></tr>
+    <tr><td><b>Lomas de Zamora ✅</b></td><td>348</td><td>8.1%</td><td><span class="badge badge-g"><b>1.85%</b></span></td><td><b>1.5%</b></td><td><b>4.589</b></td><td><b>$365</b></td><td>28.7%</td><td>30.2%</td><td>6.6%</td><td><b>2.0%</b></td></tr>
+    <tr><td><b>Avellaneda 🔴</b></td><td>403</td><td>6.0%</td><td><span class="badge badge-r"><b>2.86%</b></span></td><td><b>2.4%</b></td><td>4.581</td><td>$325</td><td>33.3%</td><td>29.8%</td><td>4.0%</td><td>0.5%</td></tr>
+  </table>
+  <div class="stitle">Mejor vs Peor ciudad — scoring multivariable</div>
+  <div class="crow">
+    <div>
+      <table class="tbl">
+        <tr><th>Métrica</th><th>Lomas ✅ (mejor)</th><th>Bernal 🔴 (peor)</th></tr>
+        <tr><td>Restaurants Q4</td><td>348</td><td><b>1.548</b></td></tr>
+        <tr><td>% del GB</td><td>8.1%</td><td><b>15.9%</b></td></tr>
+        <tr><td>GB/rest/mes</td><td><b>$7.785</b></td><td>$3.420</td></tr>
+        <tr><td>Basket</td><td><b>$365</b></td><td>$312</td></tr>
+        <tr><td>MCR ponderado</td><td><span class="badge badge-g">1.8%</span></td><td><span class="badge badge-a">2.3%</span></td></tr>
+        <tr><td>Issues/trip</td><td><b>2.8%</b></td><td>4.7%</td></tr>
+        <tr><td>Rating</td><td><b>4.59</b></td><td>4.51</td></tr>
+        <tr><td>POS</td><td>6.6%</td><td><b>21.6%</b></td></tr>
+        <tr><td>AutoAccept</td><td><b>2.0%</b></td><td>0.7%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="ins" style="margin-top:0">
+        <div class="in g full">Lomas: GB/rest/mes 2.3× mayor que Bernal. MCR más bajo, basket más alto, AutoAccept más alto. Es el modelo a replicar.</div>
+        <div class="in a full">Bernal: portafolio más grande (15.9% GB) con las métricas más débiles. POS 21.6% (el más alto) pero igual lidera en issues/trip (4.7%) — POS sola no resuelve.</div>
+        <div class="in w full">Avellaneda: MCR 2.86% y unaccept 2.4% más altos del portafolio. Problema operacional puntual. Palanca: AutoAccept urgente.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIFECYCLE -->
+<div id="lc" class="sec">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">ELC</div><div class="val">738</div><div class="dlta mu">0.5% GB · mediana 60d</div></div>
+    <div class="kpi"><div class="lbl">Early Mature</div><div class="val">1.407</div><div class="dlta dn">3.0% GB · mediana 180d</div></div>
+    <div class="kpi"><div class="lbl">Mature</div><div class="val">7.292</div><div class="dlta up">96.5% GB · mediana 922d</div></div>
+  </div>
+  <div class="stitle">Trips y promedios por lifecycle</div>
+  <table class="tbl">
+    <tr><th>Métrica</th><th>ELC</th><th>Early Mature</th><th>Mature</th></tr>
+    <tr><td>Trips totales anuales</td><td>20.450</td><td>129.253</td><td><b>4.205.908</b></td></tr>
+    <tr><td>% del total de trips</td><td>0.5%</td><td>3.0%</td><td><b>96.6%</b></td></tr>
+    <tr><td>Trips prom/rest/año</td><td>28</td><td>92</td><td>577</td></tr>
+    <tr><td>Trips mediana/rest</td><td>5</td><td>13</td><td>130</td></tr>
+    <tr><td>Trips prom/rest/mes</td><td>2.3</td><td>7.7</td><td>48.1</td></tr>
+    <tr><td><b>Trips prom/rest/día</b></td><td><span class="badge badge-r">0.08</span></td><td><span class="badge badge-a">0.25</span></td><td><span class="badge badge-g">1.58</span></td></tr>
+    <tr><td>GB/rest/mes</td><td>$741</td><td>$2.433</td><td><b>$15.203</b></td></tr>
+    <tr><td>Meses activos prom</td><td>1.7/12</td><td>4.4/12</td><td>8.4/12</td></tr>
+    <tr><td>Antigüedad mediana</td><td>60 días</td><td>180 días</td><td><b>922 días (2.5 años)</b></td></tr>
+    <tr><td>MCR ponderado</td><td>3.49%</td><td><span class="badge badge-r">6.17%</span></td><td>3.11%</td></tr>
+    <tr><td>Unaccept rate</td><td>2.58%</td><td><b>4.46%</b></td><td>2.16%</td></tr>
+    <tr><td>Rating ponderado</td><td>4.489</td><td>4.489</td><td><b>4.600</b></td></tr>
+    <tr><td>Issues/trip</td><td><span class="badge badge-r">7.52%</span></td><td>4.67%</td><td><span class="badge badge-g">3.86%</span></td></tr>
+    <tr><td>Menu→Cart</td><td><span class="badge badge-r">11.7%</span></td><td>13.3%</td><td><span class="badge badge-g">20.2%</span></td></tr>
+    <tr><td>Cart→Request</td><td>63.3%</td><td>64.5%</td><td><b>69.6%</b></td></tr>
+    <tr><td>POS</td><td>4.3%</td><td>6.0%</td><td>12.7%</td></tr>
+    <tr><td>AutoAccept</td><td>0.3%</td><td>0.4%</td><td>0.9%</td></tr>
+  </table>
+  <div class="stitle">Distribución de trips/año dentro de cada etapa</div>
+  <table class="tbl">
+    <tr><th>Trips/año</th><th>ELC</th><th>Early Mature</th><th>Mature</th></tr>
+    <tr><td>Sin trips</td><td>52 (7.0%)</td><td>209 (14.9%)</td><td>860 (11.8%)</td></tr>
+    <tr><td>1–50</td><td><b>591 (80.1%)</b></td><td><b>769 (54.7%)</b></td><td>1.981 (27.2%)</td></tr>
+    <tr><td>51–200</td><td>76 (10.3%)</td><td>251 (17.8%)</td><td>1.221 (16.7%)</td></tr>
+    <tr><td>201–1K</td><td>19 (2.6%)</td><td>161 (11.4%)</td><td>1.906 (26.1%)</td></tr>
+    <tr><td><b>>1K</b></td><td>0 (0.0%)</td><td>17 (1.2%)</td><td><b>1.324 (18.2%)</b></td></tr>
+  </table>
+  <div class="ins">
+    <div class="in a">ELC: 80% tiene 1–50 trips/año — menos de 1 trip/semana. 6% nunca tuvo primer pedido. Menu→Cart 11.7% vs 20.2% de Mature — catálogos incompletos.</div>
+    <div class="in a">Early Mature: MCR real 5.78% — la etapa más crítica. 69.5% tiene ≤50 trips/año (en riesgo churn). Solo 12.7% superó los 200 trips.</div>
+    <div class="in g">Mature: 96.5% del GB, 1.58 trips/día promedio. Los de 3+ años generan $25.329/rest/mes vs $17.235 del promedio Mature.</div>
+    <div class="in w">Mature no es homogéneo: los de <1 año tienen MCR simple 24.8% vs 13.2% de los de >3 años. Recién llegados se comportan como Early Mature.</div>
+  </div>
+</div>
+
+<!-- MONETIZACIÓN -->
+<div id="mon" class="sec">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">Offer trip rate</div><div class="val">19.8%</div><div class="dlta up">17.2%→23.4% en el año</div></div>
+    <div class="kpi"><div class="lbl">GB inorgánico</div><div class="val">20.9%</div><div class="dlta dn">18.7%→24.0% en el año</div></div>
+    <div class="kpi"><div class="lbl">ROI offers anual</div><div class="val">4.0x</div><div class="dlta up">dic: 4.03x (pico)</div></div>
+    <div class="kpi"><div class="lbl">Offer spend restos</div><div class="val">$72M</div><div class="dlta mu">5.23% del GB</div></div>
+    <div class="kpi"><div class="lbl">Uber co-financia</div><div class="val">11.2%</div><div class="dlta mu">$9.1M de $81.1M total</div></div>
+    <div class="kpi"><div class="lbl">Ads pen (dic)</div><div class="val">22.9%</div><div class="dlta up">14.0%→22.9% (+63%)</div></div>
+    <div class="kpi"><div class="lbl">Ads spend</div><div class="val">$19.5M</div><div class="dlta mu">1.42% del GB</div></div>
+    <div class="kpi"><div class="lbl">Oportunidad</div><div class="val">$355M</div><div class="dlta dn">955 rests sin monetización</div></div>
+  </div>
+  <div class="stitle">Segmentación por combo de monetización (restaurants activos)</div>
+  <table class="tbl">
+    <tr><th>Combo</th><th>Rests</th><th>% portafolio</th><th>% GB</th><th>GB/rest/mes</th><th>MCR pond.</th><th>Rating</th></tr>
+    <tr><td><b>Sin offers + Sin ads</b></td><td>4.021</td><td>48.4%</td><td>29.4%</td><td>$8.403</td><td>4.11%</td><td>4.460</td></tr>
+    <tr><td>Con offers + Sin ads</td><td>1.478</td><td>17.8%</td><td>16.6%</td><td>$12.873</td><td>3.61%</td><td>4.304</td></tr>
+    <tr><td><b>Sin offers + Con ads</b></td><td>900</td><td>10.8%</td><td>17.1%</td><td>$21.863</td><td><span class="badge badge-g">2.22%</span></td><td><b>4.507</b></td></tr>
+    <tr><td><b>Con offers + Con ads</b></td><td>1.917</td><td>23.1%</td><td>36.9%</td><td><b>$22.080</b></td><td>2.72%</td><td>4.413</td></tr>
+  </table>
+  <div class="stitle">ROI de offers por mes</div>
+  <div class="leg"><span><span class="ld" style="background:var(--blue)"></span>ROI (x)</span><span><span class="ld" style="background:var(--red)"></span>% GB inorgánico</span></div>
+  <div class="cw" style="height:180px"><canvas id="roi1"></canvas></div>
+  <div class="stitle">Monetización por lifecycle y segmento de volumen</div>
+  <div class="crow">
+    <table class="tbl">
+      <tr><th>Lifecycle</th><th>Offers</th><th>Ads</th><th>Inorg rate</th><th>ROI</th></tr>
+      <tr><td>ELC</td><td>31.9%</td><td>30.5%</td><td><span class="badge badge-r">33.8%</span></td><td>4.0x</td></tr>
+      <tr><td>Early Mature</td><td>41.9%</td><td>38.8%</td><td>25.2%</td><td>3.6x</td></tr>
+      <tr><td>Mature</td><td>41.6%</td><td>33.3%</td><td>19.5%</td><td>3.3x</td></tr>
+    </table>
+    <table class="tbl">
+      <tr><th>Segmento</th><th>Offers</th><th>Ads</th><th>ROI</th><th>GB/rest/mes</th></tr>
+      <tr><td>1–50 trips/año</td><td>28.0%</td><td>22.2%</td><td>3.5x</td><td>$350</td></tr>
+      <tr><td>51–200</td><td>46.4%</td><td>32.4%</td><td>3.5x</td><td>$2.964</td></tr>
+      <tr><td>201–1K</td><td>49.9%</td><td>38.6%</td><td>3.2x</td><td>$13.326</td></tr>
+      <tr><td><b>>1K</b></td><td><b>52.2%</b></td><td><b>57.2%</b></td><td>3.4x</td><td><b>$60.600</b></td></tr>
+    </table>
+  </div>
+  <div class="ins">
+    <div class="in a">48.4% del portafolio activo sin ninguna monetización genera $8.403/rest/mes. Con ambas herramientas: $22.080 — 2.6x más.</div>
+    <div class="in g">955 rests sin monetización con GB >$100K/año = <b>$355M de GB sin activar</b>. Target más accionable del plan.</div>
+    <div class="in">Argumento para el merchant: por cada $73 invertidos (neto de Uber), genera $316 de basket. ROI 4.3x sobre costo neto. Las offers rinden más en picos de demanda (dic: 4.03x).</div>
+    <div class="in w">Ads sin offers tiene el MCR más bajo (2.22%) y mejor rating (4.507) — es la palanca más limpia. Secuencia: Offers primero → Ads después.</div>
+  </div>
+</div>
+
+<!-- OPS MCR -->
+<div id="ops" class="sec">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">MCR ponderado</div><div class="val">2.3%</div><div class="dlta mu">vs 15.8% simple</div></div>
+    <div class="kpi"><div class="lbl">Unaccept rate</div><div class="val">2.23%</div><div class="dlta dn">corr con GB: −0.251</div></div>
+    <div class="kpi"><div class="lbl">Cancel rate</div><div class="val">0.67%</div><div class="dlta mu">estructural — no cambia</div></div>
+    <div class="kpi"><div class="lbl">GB perdido</div><div class="val">$41.8M</div><div class="dlta dn">132K trips perdidas</div></div>
+  </div>
+  <div class="stitle">Por qué MCR simple (15.8%) ≠ MCR ponderado (2.3%) — apertura por segmento</div>
+  <table class="tbl">
+    <tr><th>Segmento (trips/año)</th><th>Restaurants</th><th>% portafolio</th><th>% del GB</th><th>MCR simple</th><th>Lectura</th></tr>
+    <tr><td>Sin trips (inactivos)</td><td>1.121</td><td>11.9%</td><td>0.0%</td><td><span class="badge badge-r">33.1%</span></td><td>Arrastra el promedio sin generar negocio</td></tr>
+    <tr><td>1–50 trips/año</td><td>3.341</td><td>35.4%</td><td>1.0%</td><td><span class="badge badge-r">26.1%</span></td><td>Alto MCR, casi sin impacto en GB</td></tr>
+    <tr><td>51–200 trips/año</td><td>1.548</td><td>16.4%</td><td>4.0%</td><td><span class="badge badge-a">12.8%</span></td><td>Transición — MCR mejora con volumen</td></tr>
+    <tr><td>201–1K trips/año</td><td>2.086</td><td>22.1%</td><td>24.2%</td><td><span class="badge badge-a">6.1%</span></td><td>Bloque medio — 24% del GB</td></tr>
+    <tr><td><b>>1K trips/año</b></td><td><b>1.341</b></td><td><b>14.2%</b></td><td><b>70.8%</b></td><td><span class="badge badge-g"><b>2.1%</b></span></td><td><b>El núcleo — MCR controlado</b></td></tr>
+  </table>
+  <div class="crow">
+    <div><div class="stitle">Impacto de POS y AutoAccept en unaccept/cancel (%)</div><div class="cw" style="height:210px"><canvas id="op1"></canvas></div></div>
+    <div><div class="stitle">MCR por bucket — % del GB total</div><div class="cw" style="height:210px"><canvas id="op2"></canvas></div></div>
+  </div>
+  <div class="ins">
+    <div class="in a">El 47% del portafolio (inactivos + 1–50 trips) tiene MCR 25%+ pero genera solo 1% del GB. Inflan el promedio simple.</div>
+    <div class="in g">Los >1K trips (14.2% del portafolio, 70.8% del GB) tienen MCR de 2.1% — el portafolio que importa está sano.</div>
+    <div class="in">POS elimina 70% del unaccept (2.39%→0.73%). No mueve el cancel (0.67% en ambos casos).</div>
+    <div class="in g">AutoAccept elimina virtualmente todo el unaccept (2.27%→0.59%) — más efectivo que POS para el MCR.</div>
+  </div>
+</div>
+
+<!-- CALIDAD -->
+<div id="cal" class="sec">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">Issues/trip anual</div><div class="val">3.91%</div><div class="dlta dn">3.46%→4.33% en dic</div></div>
+    <div class="kpi"><div class="lbl">Issues totales</div><div class="val">170K</div><div class="dlta dn">+66.7% vs trips +33.2%</div></div>
+    <div class="kpi"><div class="lbl">Order accuracy</div><div class="val">34.1%</div><div class="dlta mu">del total issues</div></div>
+    <div class="kpi"><div class="lbl">Long delivery</div><div class="val">+96%</div><div class="dlta dn">tipo que más empeoró</div></div>
+    <div class="kpi"><div class="lbl">Rating ponderado</div><div class="val">4.60</div><div class="dlta dn">4.64→4.54 en dic</div></div>
+  </div>
+  <div class="stitle">Issues/trip por tipo — evolución mensual</div>
+  <table class="tbl">
+    <tr><th>Mes</th><th>Issues/trip</th><th>Order acc/trip</th><th>Long del/trip</th><th>Food q/trip</th><th>Never rec/trip</th><th>Rating</th></tr>
+    <tr><td>Ene</td><td>3.46%</td><td>1.30%</td><td><b>0.28%</b></td><td>0.53%</td><td>0.19%</td><td>4.584</td></tr>
+    <tr><td>May</td><td>4.07%</td><td>1.37%</td><td>0.45%</td><td>0.62%</td><td>0.24%</td><td>4.575</td></tr>
+    <tr><td>Jun</td><td>4.21%</td><td>1.39%</td><td><span class="badge badge-r">0.57% ⚠️</span></td><td>0.58%</td><td>0.24%</td><td>4.597</td></tr>
+    <tr><td>Jul</td><td>4.16%</td><td>1.38%</td><td>0.50%</td><td>0.58%</td><td>0.26%</td><td>4.571</td></tr>
+    <tr><td>Ago</td><td>3.60%</td><td>1.25%</td><td>0.34%</td><td>0.51%</td><td>0.22%</td><td>4.558</td></tr>
+    <tr><td>Dic</td><td><span class="badge badge-r">4.33%</span></td><td><b>1.40%</b></td><td><b>0.55%</b></td><td>0.59%</td><td>0.25%</td><td>4.497</td></tr>
+  </table>
+  <div class="stitle">Rating e Issues/trip por segmento de volumen</div>
+  <table class="tbl">
+    <tr><th>Segmento</th><th>% GB</th><th>Issues/trip</th><th>Order acc</th><th>Long del</th><th>Rating prom</th><th>Δ rating ene→dic</th></tr>
+    <tr><td>1–50 trips/año</td><td>1.0%</td><td><span class="badge badge-r">10.42%</span></td><td>3.28%</td><td>0.84%</td><td>4.242</td><td class="up">+0.068 ↑</td></tr>
+    <tr><td>51–200</td><td>4.0%</td><td>5.87%</td><td>1.98%</td><td>0.58%</td><td>4.382</td><td class="mu">+0.001 →</td></tr>
+    <tr><td>201–1K</td><td>24.2%</td><td>4.30%</td><td>1.41%</td><td>0.46%</td><td>4.539</td><td class="dn">−0.110 ↓</td></tr>
+    <tr><td><b>>1K</b></td><td><b>70.8%</b></td><td><span class="badge badge-g">3.57%</span></td><td>1.25%</td><td>0.40%</td><td><b>4.612</b></td><td class="dn">−0.097 ↓</td></tr>
+  </table>
+  <div class="ins">
+    <div class="in a">Issues crecieron +66.7% vs trips +33.2% — la calidad per trip se deteriora. Issues/trip pasó de 3.46% a 4.33% (+25.1%).</div>
+    <div class="in a">Long delivery: 0.28%→0.55% (+96%) — el tipo de issue que más empeoró. Ligado a supply de riders, no al merchant.</div>
+    <div class="in w">El deterioro del rating ocurre en 201–1K (Δ−0.110) y >1K (Δ−0.097) — los que generan el 95% del GB. Los de bajo volumen mejoran levemente.</div>
+    <div class="in">Order accuracy (34.1% del total) está ligado a baja adopción de POS — el menú no está sincronizado con los ítems disponibles.</div>
+  </div>
+</div>
+
+<!-- FUNNEL -->
+<div id="fun" class="sec">
+  <div class="stitle">El funnel completo — volúmenes reales anuales 2024</div>
+  <div class="funnel">
+    <div class="fstep"><div class="fbar" style="width:100%">Visible</div><div class="fmeta"><b>2.649M sesiones</b> — restaurant disponible para el eater</div></div>
+    <div class="fstep"><div class="fbar" style="width:75%;background:var(--green)">Feed imp</div><div class="fmeta"><b>60.8M</b> — <b style="color:var(--red)">2.30% del visible</b> · drop −97.7%</div></div>
+    <div class="fstep"><div class="fbar" style="width:55%;background:var(--amber)">Menu imp</div><div class="fmeta"><b>7.5M</b> — <b>12.4% del feed</b> · drop −87.6%</div></div>
+    <div class="fstep"><div class="fbar" style="width:35%;background:var(--amber)">Cart add</div><div class="fmeta"><b>1.45M</b> — <b>19.2% del menu</b> · drop −80.8%</div></div>
+    <div class="fstep"><div class="fbar" style="width:20%;background:var(--green)">Request</div><div class="fmeta"><b>1.02M</b> — <b style="color:var(--green)">70.4% del cart</b> · drop −29.6%</div></div>
+    <div class="fstep"><div class="fbar" style="width:15%;background:var(--blue)">Completado</div><div class="fmeta"><b>4.36M trips</b> — resultado final del año</div></div>
+  </div>
+  <div class="stitle">Evolución mensual del funnel — tasas clave</div>
+  <table class="tbl">
+    <tr><th>Mes</th><th>Visible (M)</th><th>Feed rate</th><th>Feed→Menu</th><th>Menu→Cart</th><th>Cart→Req</th></tr>
+    <tr><td>Ene</td><td>301</td><td><b>5.77%</b></td><td>12.0%</td><td>19.8%</td><td>67.8%</td></tr>
+    <tr><td>Feb</td><td>388</td><td>4.05%</td><td>14.5%</td><td>19.9%</td><td>68.2%</td></tr>
+    <tr><td>May</td><td>424</td><td>4.16%</td><td>14.2%</td><td>20.1%</td><td>69.3%</td></tr>
+    <tr><td>Jul</td><td>406</td><td>3.75%</td><td>14.8%</td><td>20.3%</td><td>69.2%</td></tr>
+    <tr><td>Sep</td><td>650</td><td>2.99%</td><td>12.3%</td><td>19.6%</td><td>69.8%</td></tr>
+    <tr><td>Nov</td><td>1.023</td><td>2.00%</td><td>12.7%</td><td>19.1%</td><td>70.4%</td></tr>
+    <tr><td>Dic</td><td>1.034</td><td><span class="badge badge-r">2.15%</span></td><td>12.3%</td><td>18.6%</td><td><span class="badge badge-g">70.5%</span></td></tr>
+  </table>
+  <div class="stitle">Funnel por lifecycle — dónde pierde cada etapa</div>
+  <table class="tbl">
+    <tr><th>Lifecycle</th><th>Menu→Cart</th><th>Cart→Req</th><th>Interpretación</th></tr>
+    <tr><td>ELC</td><td><span class="badge badge-r">11.7%</span></td><td>63.3%</td><td>Catálogos incompletos — el eater ve el menú pero no agrega</td></tr>
+    <tr><td>Early Mature</td><td>13.3%</td><td>64.5%</td><td>Mejora pero sigue bajo</td></tr>
+    <tr><td><b>Mature</b></td><td><span class="badge badge-g"><b>20.2%</b></span></td><td><b>69.6%</b></td><td>Referencia — catálogos completos y relevantes</td></tr>
+  </table>
+  <div class="ins">
+    <div class="in a">Mayor drop: Visible→Feed (−97.7%). Sessions visible crecieron +243% pero feed rate cayó de 5.77% a 2.15% — cada restaurant tiene menos presencia individual en el feed.</div>
+    <div class="in g">Cart→Request mejoró de 67.8% a 70.5% — cuando el eater llega al carrito, completa más. La intención de compra es alta.</div>
+    <div class="in w">Menu→Cart bajó de 19.8% a 18.6% en dic. ELC convierte al 11.7% vs 20.2% Mature — brecha de 8.5pp. Palanca: contenido (fotos, descripciones).</div>
+    <div class="in">El cuello de botella está en la distribución algorítmica del feed, no en la conversión del eater con intención.</div>
+  </div>
+</div>
+
+<!-- TECNOLOGÍA -->
+<div id="tec" class="sec">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">POS adopción</div><div class="val">11.1%</div><div class="dlta wn">1.044 rests</div></div>
+    <div class="kpi"><div class="lbl">AutoAccept adopción</div><div class="val">0.8%</div><div class="dlta dn">73 rests — headroom enorme</div></div>
+    <div class="kpi"><div class="lbl">POS → unaccept</div><div class="val">−70%</div><div class="dlta up">2.39%→0.73%</div></div>
+    <div class="kpi"><div class="lbl">AutoAcc → unaccept</div><div class="val">−74%</div><div class="dlta up">2.27%→0.59%</div></div>
+    <div class="kpi"><div class="lbl">POS → ROR</div><div class="val">+2.8pp</div><div class="dlta up">95.6%→98.4%</div></div>
+    <div class="kpi"><div class="lbl">Sin tecnología</div><div class="val">~88%</div><div class="dlta dn">del portafolio</div></div>
+  </div>
+  <div class="stitle">Impacto de POS — qué causa y qué no</div>
+  <table class="tbl">
+    <tr><th>KPI</th><th>Sin POS</th><th>Con POS</th><th>Diferencia</th><th>¿Causal?</th></tr>
+    <tr><td>Unaccept rate</td><td>2.39%</td><td><span class="badge badge-g">0.73%</span></td><td>−70%</td><td>✅ Sí — directo</td></tr>
+    <tr><td>MCR ponderado</td><td>2.43%</td><td><span class="badge badge-g">1.15%</span></td><td>−53%</td><td>✅ Sí — vía unaccept</td></tr>
+    <tr><td>ROR ponderado</td><td>95.6%</td><td><b>98.4%</b></td><td>+2.8pp</td><td>✅ Sí — directo</td></tr>
+    <tr><td>Basket</td><td>$312</td><td>$353</td><td>+$41</td><td>⚠️ Correlación, no causalidad</td></tr>
+  </table>
+  <div class="stitle">Combo POS + AutoAccept — MCR real</div>
+  <table class="tbl">
+    <tr><th>Combo</th><th>Rests</th><th>% GB</th><th>MCR real</th></tr>
+    <tr><td>Sin POS + Sin AutoAcc</td><td>8.330</td><td>86.2%</td><td><span class="badge badge-r">3.1%</span></td></tr>
+    <tr><td>Con POS + Sin AutoAcc</td><td>1.034</td><td>10.9%</td><td><span class="badge badge-a">1.4%</span></td></tr>
+    <tr><td><b>Sin POS + Con AutoAcc</b></td><td>54</td><td>2.3%</td><td><span class="badge badge-g"><b>1.1%</b></span></td></tr>
+    <tr><td>Con POS + Con AutoAcc</td><td>10</td><td>0.3%</td><td><span class="badge badge-g">0.8%</span></td></tr>
+  </table>
+  <div class="ins">
+    <div class="in g">AutoAccept sola (1.1%) supera a POS sola (1.4%) en reducción de MCR. Más fácil de implementar — no requiere integración de sistema externo.</div>
+    <div class="in a">Solo 63 restaurants usan AutoAccept sobre 9.437. El mayor headroom del portafolio con el mayor impacto demostrado.</div>
+    <div class="in">POS: causa directa en unaccept (−70%) y ROR (+2.8pp). El basket más alto es correlación — los que adoptan POS ya son más organizados.</div>
+    <div class="in w">Secuencia correcta: AutoAccept primero (bajo costo, máximo impacto MCR) → POS después (complementa con ROR y operación).</div>
+  </div>
+</div>
+
+<!-- ORG/INORG -->
+<div id="org" class="sec">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">GB orgánico</div><div class="val">$1.090B</div><div class="dlta up">79.1% del total</div></div>
+    <div class="kpi"><div class="lbl">GB inorgánico</div><div class="val">$288M</div><div class="dlta dn">20.9% del total</div></div>
+    <div class="kpi"><div class="lbl">% inorg enero</div><div class="val">18.7%</div><div class="dlta mu">base del año</div></div>
+    <div class="kpi"><div class="lbl">% inorg diciembre</div><div class="val">24.0%</div><div class="dlta dn">+5.3pp en el año</div></div>
+  </div>
+  <div class="crow">
+    <div><div class="stitle">GB orgánico vs inorgánico mensual ($M)</div><div class="leg"><span><span class="ld" style="background:var(--blue)"></span>Orgánico</span><span><span class="ld" style="background:var(--red)"></span>Inorgánico</span></div><div class="cw" style="height:210px"><canvas id="og1"></canvas></div></div>
+    <div><div class="stitle">ROI de offers mensual (x) y % inorgánico</div><div class="leg"><span><span class="ld" style="background:var(--green)"></span>ROI</span><span><span class="ld" style="background:var(--red)"></span>% inorg</span></div><div class="cw" style="height:210px"><canvas id="og2"></canvas></div></div>
+  </div>
+  <div class="ins">
+    <div class="in a">% inorgánico creció de 18.7% a 24.0% — parte del crecimiento está siendo comprado con descuentos.</div>
+    <div class="in g">79.1% del GB sigue siendo orgánico. La base es sólida — el riesgo está en la tendencia creciente del inorgánico.</div>
+    <div class="in">ROI más alto en diciembre (4.03x) y mayo (3.70x) — las offers rinden más cuando el mercado ya está activo.</div>
+    <div class="in w">ELC tiene el mayor inorgánico rate (33.8%) — usan offers para arrancar pero a costo elevado.</div>
+  </div>
+</div>
+
+<!-- PARETO -->
+<div id="par" class="sec">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">Top 10%</div><div class="val">61.4%</div><div class="dlta mu">943 rests → GB</div></div>
+    <div class="kpi"><div class="lbl">Top 20%</div><div class="val">82.3%</div><div class="dlta mu">1.887 rests</div></div>
+    <div class="kpi"><div class="lbl">GB = 0</div><div class="val">1.009</div><div class="dlta dn">10.7% portafolio</div></div>
+    <div class="kpi"><div class="lbl">Activos 12/12</div><div class="val">2.337</div><div class="dlta up">58.3% del GB</div></div>
+  </div>
+  <div class="crow">
+    <div><div class="stitle">Curva de concentración (Pareto)</div><div class="cw" style="height:230px"><canvas id="pa1"></canvas></div></div>
+    <div><div class="stitle">% GB por meses activos</div><div class="cw" style="height:230px"><canvas id="pa2"></canvas></div></div>
+  </div>
+  <div class="ins">
+    <div class="in a">Concentración extrema: top 20% genera el 82.3% del GB. Modelo de atención 1:1 solo para ellos.</div>
+    <div class="in a">1.009 restaurants con GB=0 — en la plataforma sin generar ingresos.</div>
+    <div class="in g">7+ meses activos → 96.2% del GB. Pasar de 4–6 meses activos (2.5% GB) a 7+ es el salto crítico.</div>
+    <div class="in">Retención > adquisición como prioridad de esfuerzo.</div>
+  </div>
+</div>
+
+<!-- COHORT -->
+<div id="coh" class="sec">
+  <div class="stitle">Curva de maduración — GB/rest/mes por antigüedad</div>
+  <table class="tbl">
+    <tr><th>Antigüedad</th><th>Rests</th><th>GB/rest/mes</th><th>% del Mature</th><th>Trips/rest/mes</th><th>% GB total</th></tr>
+    <tr><td>0–3 meses</td><td>678</td><td>$690</td><td><span class="badge badge-r">4%</span></td><td>2.2</td><td>0.4%</td></tr>
+    <tr><td>3–6 meses</td><td>659</td><td>$2.027</td><td><span class="badge badge-r">12%</span></td><td>6.2</td><td>1.2%</td></tr>
+    <tr><td>6–12 meses</td><td>1.453</td><td>$4.929</td><td><span class="badge badge-a">29%</span></td><td>15.4</td><td>6.2%</td></tr>
+    <tr><td>1–2 años</td><td>1.734</td><td>$12.352</td><td><span class="badge badge-a">72%</span></td><td>36.9</td><td>18.7%</td></tr>
+    <tr><td>2–3 años</td><td>987</td><td>$13.567</td><td>79%</td><td>44.2</td><td>11.7%</td></tr>
+    <tr><td><b>3+ años</b></td><td><b>2.805</b></td><td><b>$25.329</b></td><td><span class="badge badge-g"><b>147%</b></span></td><td><b>81.1</b></td><td><b>61.9%</b></td></tr>
+  </table>
+  <div class="stitle">Onboarding — qué pasa según velocidad de arranque</div>
+  <table class="tbl">
+    <tr><th></th><th>≤7 días</th><th>>7 días</th><th>>30 días</th></tr>
+    <tr><td>Restaurants</td><td>5.210</td><td>3.695</td><td>1.322</td></tr>
+    <tr><td>Churn rate</td><td>6.3%</td><td>7.1%</td><td><span class="badge badge-r">7.8%</span></td></tr>
+    <tr><td>GB anual prom/rest</td><td><b>$202.610</b></td><td>$113.194</td><td>$100.699</td></tr>
+    <tr><td>Trips/año prom/rest</td><td><b>652</b></td><td>342</td><td>284</td></tr>
+    <tr><td>Meses activos prom</td><td><b>8.4</b></td><td>7.3</td><td>7.2</td></tr>
+  </table>
+  <div class="stitle">Churn por cohort de activación</div>
+  <table class="tbl">
+    <tr><th>Cohort</th><th>Activaciones</th><th>Activos en Q4</th><th>Churnearon</th><th>GB churneados</th></tr>
+    <tr><td>Q1 2024 (ene–mar)</td><td>791</td><td>392 (49.6%)</td><td><span class="badge badge-r">399 (50.4%)</span></td><td>$3.8M</td></tr>
+    <tr><td>Q2 2024 (abr–jun)</td><td>647</td><td>367 (56.7%)</td><td>280 (43.3%)</td><td>$1.9M</td></tr>
+    <tr><td>Q3 2024 (jul–sep)</td><td>629</td><td>452 (71.9%)</td><td>177 (28.1%)</td><td>$0.4M</td></tr>
+  </table>
+  <div class="ins">
+    <div class="in a">Trigger crítico: los que arrancan en ≤7 días generan 1.8x más GB y 1.9x más trips que los que tardan más — no es solo menor churn, es un perfil de cuenta completamente distinto.</div>
+    <div class="in g">3+ años generan $25.329/rest/mes — 147% del Mature promedio. Una cuenta tarda 1–2 años en alcanzar el 72% del Mature. Retener temprano tiene valor enorme a largo plazo.</div>
+    <div class="in w">El % que arranca en ≤7 días oscila entre 44% y 56% sin tendencia de mejora. El onboarding no mejoró sistemáticamente en 2024.</div>
+    <div class="in">Q1: 50.4% churneó hacia Q4. El GB perdido es bajo ($3.8M) porque los churneados nunca generaron volumen real.</div>
+  </div>
+</div>
+
+<!-- CORRELACIONES -->
+<div id="corr" class="sec">
+  <div class="stitle">GB promedio mensual por segmento — relación con variables clave</div>
+  <table class="tbl">
+    <tr><th>Variable</th><th>Con</th><th>Sin</th><th>Ratio</th><th>Lectura</th></tr>
+    <tr><td><b>Auto Accept</b></td><td><b>$53.793</b></td><td>$19.581</td><td><span class="badge badge-g">2.7×</span></td><td>Mayor diferenciador del portafolio</td></tr>
+    <tr><td><b>Ads activas</b></td><td><b>$34.430</b></td><td>$17.010</td><td><span class="badge badge-g">2.0×</span></td><td>2x más GB mensual con ads</td></tr>
+    <tr><td><b>Offers activas</b></td><td><b>$29.234</b></td><td>$16.628</td><td><span class="badge badge-a">1.8×</span></td><td>Menor que ads pero mayor alcance</td></tr>
+    <tr><td>POS integrado</td><td>$19.137</td><td>$20.053</td><td><span class="badge badge-r">1.0×</span></td><td>No diferencia — es correlación de selección</td></tr>
+  </table>
+  <div class="crow">
+    <div><div class="stitle">Correlaciones con GB (por restaurant)</div><div class="cw" style="height:250px"><canvas id="cr1"></canvas></div></div>
+    <div><div class="stitle">Correlaciones del funnel con GB</div><div class="cw" style="height:250px"><canvas id="cr2"></canvas></div></div>
+  </div>
+  <div class="ins">
+    <div class="in a">AutoAccept y Ads son los mayores diferenciadores de GB. POS no diferencia — confirmado tanto en promedio de GB como en perfil Top 20% vs Bottom 50%.</div>
+    <div class="in g">MCR (−0.27) es la variable más correlacionada negativamente con GB — reducirlo es la palanca estructural más poderosa.</div>
+    <div class="in">menu_to_cart (0.460) es la tasa del funnel más correlacionada con GB. Fotos y descripciones son la palanca directa.</div>
+    <div class="in w">n_sessions_visible (0.498) tiene alta correlación pero no es palanca directa — los restaurants con más trips simplemente tienen más horas de operación.</div>
+  </div>
+</div>
+
+<!-- ESTACIONALIDAD -->
+<div id="est" class="sec">
+  <div class="stitle">Patrones mensuales — GB total, GB/rest y métricas clave</div>
+  <table class="tbl">
+    <tr><th>Mes</th><th>GB ($M)</th><th>Rests activos</th><th>GB/rest/mes</th><th>Trips/rest/mes</th><th>Offer rate</th><th>Issues/trip</th></tr>
+    <tr><td><b>Ene</b></td><td>93.1</td><td>4.720</td><td>$19.723</td><td>65.3</td><td>17.2%</td><td>3.46%</td></tr>
+    <tr><td>Feb</td><td>103.4</td><td>5.244</td><td>$19.721</td><td>64.2</td><td>16.6%</td><td>3.74%</td></tr>
+    <tr><td>Mar</td><td>98.8</td><td>4.591</td><td>$21.530</td><td>69.8</td><td>18.1%</td><td>3.67%</td></tr>
+    <tr><td>Abr</td><td>108.9</td><td>5.185</td><td>$21.015</td><td>68.6</td><td>19.1%</td><td>3.70%</td></tr>
+    <tr><td><b>May</b></td><td>121.9</td><td>5.286</td><td>$23.057</td><td>73.8</td><td>18.8%</td><td>4.07%</td></tr>
+    <tr><td>Jun ⚠️</td><td>119.8</td><td>5.235</td><td>$22.876</td><td>71.7</td><td>18.2%</td><td>4.21%</td></tr>
+    <tr><td><b>Jul</b></td><td><b>112.0</b></td><td>5.082</td><td>$22.038</td><td>69.2</td><td>17.9%</td><td>4.16%</td></tr>
+    <tr><td>Ago</td><td>116.0</td><td>5.201</td><td>$22.304</td><td>70.1</td><td>19.9%</td><td>3.60%</td></tr>
+    <tr><td>Sep</td><td>119.4</td><td>5.230</td><td>$22.821</td><td>71.2</td><td>20.3%</td><td>4.11%</td></tr>
+    <tr><td>Oct</td><td>116.6</td><td>5.089</td><td>$22.909</td><td>71.7</td><td>22.3%</td><td>3.83%</td></tr>
+    <tr><td>Nov</td><td>130.7</td><td>5.429</td><td>$24.074</td><td>74.4</td><td>23.7%</td><td>3.86%</td></tr>
+    <tr><td><b>Dic</b></td><td><b>137.4</b></td><td>5.332</td><td><b>$25.764</b></td><td><b>77.0</b></td><td>23.4%</td><td><span class="badge badge-r">4.33%</span></td></tr>
+  </table>
+  <div class="ins">
+    <div class="in">El GB total sube +47.6% de enero a diciembre. El GB/rest/mes sube +30.6% (de $19.723 a $25.764) — el restaurant promedio también creció, no solo el portafolio por nuevas cuentas.</div>
+    <div class="in w">Dos valles: enero y julio (invierno austral). Dos picos: mayo y diciembre. Junio tiene el pico de long delivery (⚠️) — posible problema de supply de riders en clima frío.</div>
+    <div class="in a">Q4 concentra el mayor GB Y el mayor issues/trip simultáneamente — el volumen de fin de año presiona la operación.</div>
+    <div class="in g">ROI de offers más alto en diciembre (4.03x) — activar offers antes de los picos de demanda maximiza el retorno.</div>
+  </div>
+</div>
+
+<!-- CHURN -->
+<div id="churn" class="sec">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">~30d sin GB</div><div class="val">47.2%</div><div class="dlta dn">4.456 rests</div></div>
+    <div class="kpi"><div class="lbl">~60d sin GB</div><div class="val">31.5%</div><div class="dlta dn">2.971 rests</div></div>
+    <div class="kpi"><div class="lbl">~90d sin GB</div><div class="val">26.4%</div><div class="dlta dn">2.488 rests</div></div>
+    <div class="kpi"><div class="lbl">GB churned</div><div class="val">$57M</div><div class="dlta wn">4.1% del GB total</div></div>
+    <div class="kpi"><div class="lbl">MCR churned</div><div class="val">29.9%</div><div class="dlta dn">Todos Mature</div></div>
+    <div class="kpi"><div class="lbl">Activos 12/12</div><div class="val">27.7%</div><div class="dlta dn">del portafolio</div></div>
+  </div>
+  <div class="crow">
+    <div><div class="stitle">Distribución meses activos</div><div class="cw" style="height:200px"><canvas id="ch1"></canvas></div></div>
+    <div><div class="stitle">% GB por meses activos</div><div class="cw" style="height:200px"><canvas id="ch2"></canvas></div></div>
+  </div>
+  <div class="ins">
+    <div class="in a">Solo 27.7% estuvo activo los 12 meses. El portafolio es mucho más volátil de lo que parece.</div>
+    <div class="in">El churn en volumen (29.4%) es alto pero en valor (4.1% GB) es manejable — se van principalmente long tail.</div>
+    <div class="in g">Los churneados tienen MCR 29.9% y 4.9 meses activos promedio — nunca se estabilizaron. Perfil claro y previsible.</div>
+    <div class="in w">El objetivo no es recuperar churneados — es evitar que los ELC actuales sigan el mismo camino.</div>
+  </div>
+</div>
+
+<!-- CUISINE -->
+<div id="cuis" class="sec">
+  <div class="stitle">MCR ponderado y Ads penetration por cuisine</div>
+  <div class="crow">
+    <div><div class="cw" style="height:280px"><canvas id="cu1"></canvas></div></div>
+    <div><div class="cw" style="height:280px"><canvas id="cu2"></canvas></div></div>
+  </div>
+  <table class="tbl">
+    <tr><th>Cuisine</th><th>% GB</th><th>MCR pond.</th><th>Unaccept</th><th>Ads pen</th><th>C2R</th><th>Basket</th><th>Oportunidad</th></tr>
+    <tr><td>Empanadas</td><td>15.9%</td><td>2.2%</td><td>2.1%</td><td>15.3%</td><td>72.0%</td><td>$284</td><td>Ads headroom</td></tr>
+    <tr><td>Argentina</td><td>9.6%</td><td>2.4%</td><td>2.3%</td><td>16.2%</td><td>70.7%</td><td>$278</td><td>Ads headroom</td></tr>
+    <tr><td>Steak/Grill</td><td>9.3%</td><td>2.2%</td><td>2.3%</td><td>20.6%</td><td>70.8%</td><td>$340</td><td>Upsell ads+offers</td></tr>
+    <tr><td>Sushi</td><td>7.8%</td><td>2.1%</td><td>2.1%</td><td><b>26.7%</b></td><td>66.9%</td><td>$417</td><td>Upsell — ya tiene hábito</td></tr>
+    <tr><td><b>Desserts 🔴</b></td><td>7.0%</td><td><span class="badge badge-r">3.1%</span></td><td>2.8%</td><td><span class="badge badge-r">12.0%</span></td><td>63.2%</td><td>$291</td><td><b>Triple problema: ops+ads+contenido</b></td></tr>
+    <tr><td>Coffee&Tea</td><td>5.4%</td><td><span class="badge badge-a">2.9%</span></td><td>2.8%</td><td>17.8%</td><td>67.4%</td><td>$282</td><td>Ops + offers demanda</td></tr>
+    <tr><td><b>Healthy ✅</b></td><td>3.0%</td><td><span class="badge badge-g">1.7%</span></td><td>1.4%</td><td>21.4%</td><td><b>73.7%</b></td><td>$274</td><td><b>Modelo a replicar</b></td></tr>
+    <tr><td><b>Chinese ✅</b></td><td>2.5%</td><td><span class="badge badge-g">1.0%</span></td><td>1.0%</td><td>17.2%</td><td>71.6%</td><td>$297</td><td><b>Modelo operacional referencia</b></td></tr>
+  </table>
+  <div class="ins">
+    <div class="in g">Chinese (1.0%) y Healthy (1.7%): MCR más bajos + mejor C2R — modelos operacionales a replicar.</div>
+    <div class="in a">Desserts: MCR 3.1% + ads 12% + C2R 63.2% — triple problema. Requiere intervención integral.</div>
+    <div class="in">Sushi: MCR bajo + ads 26.7% (más alto del top) + basket $417 — candidato natural a upsell de monetización.</div>
+  </div>
+</div>
+
+<!-- COMBOS TECH -->
+<div id="combos" class="sec">
+  <div class="stitle">Combo POS + Auto Accept — MCR real</div>
+  <div class="cw" style="height:200px"><canvas id="cb1"></canvas></div>
+  <table class="tbl" style="margin-top:16px">
+    <tr><th>Combo</th><th>Rests</th><th>% GB</th><th>MCR real</th><th>Prioridad</th></tr>
+    <tr><td>Sin POS + Sin AutoAcc</td><td>8.330</td><td>86.2%</td><td><span class="badge badge-r">3.1%</span></td><td>Target principal</td></tr>
+    <tr><td>Con POS + Sin AutoAcc</td><td>1.034</td><td>10.9%</td><td><span class="badge badge-a">1.4%</span></td><td>Upsell AutoAccept</td></tr>
+    <tr><td><b>Sin POS + Con AutoAcc</b></td><td>54</td><td>2.3%</td><td><span class="badge badge-g"><b>1.1%</b></span></td><td><b>Más efectivo que POS sola</b></td></tr>
+    <tr><td>Con POS + Con AutoAcc</td><td>10</td><td>0.3%</td><td><span class="badge badge-g">0.8%</span></td><td>Mejor combo</td></tr>
+  </table>
+  <div class="ins">
+    <div class="in a full"><b>AutoAccept sola (1.1%) es más efectiva que POS sola (1.4%) para reducir el MCR.</b> Y es mucho más fácil de implementar. Prioridad: #1 AutoAccept → #2 POS.</div>
+    <div class="in g">Solo 63 restaurants usan AutoAccept sobre 9.437. El mayor headroom del portafolio con el mayor retorno demostrado.</div>
+  </div>
+</div>
+
+<!-- ADS+OFFERS -->
+<div id="monet2" class="sec">
+  <div class="stitle">Combo Ads + Offers — restaurantes activos</div>
+  <div class="cw" style="height:200px"><canvas id="ao1"></canvas></div>
+  <table class="tbl" style="margin-top:16px">
+    <tr><th>Combo</th><th>Rests</th><th>% GB</th><th>MCR real</th><th>GB/rest/mes</th></tr>
+    <tr><td>Sin offers + Sin ads</td><td>4.021</td><td>29.4%</td><td><span class="badge badge-r">3.07%</span></td><td>$8.403</td></tr>
+    <tr><td>Con offers + Sin ads</td><td>1.478</td><td>16.6%</td><td>2.45%</td><td>$12.873</td></tr>
+    <tr><td><b>Sin offers + Con ads</b></td><td>900</td><td>17.1%</td><td><span class="badge badge-g"><b>1.67%</b></span></td><td>$21.863</td></tr>
+    <tr><td><b>Con offers + Con ads</b></td><td>1.917</td><td>36.9%</td><td>1.91%</td><td><b>$22.080</b></td></tr>
+  </table>
+  <div class="ins">
+    <div class="in a full">4.021 restaurants sin ninguna monetización = 48.4% del portafolio con GB/rest/mes de $8.403. Con ambas herramientas: $22.080 — <b>2.6x más</b>. 955 de ellos tienen GB >$100K/año = $355M de oportunidad.</div>
+    <div class="in g">Ads sola tiene el MCR más bajo (1.67%) y el mejor rating — es la palanca más limpia operacionalmente.</div>
+    <div class="in">Secuencia óptima: Offers primero (mayor alcance, 2.524 rests) → Ads después (mayor GB/rest/mes).</div>
+  </div>
+</div>
+
+<!-- TOP 20 VS BOTTOM -->
+<div id="top20" class="sec">
+  <div class="crow">
+    <div><div class="stitle">Perfil comparado — Top 20% vs Bottom 50%</div><div class="cw" style="height:250px"><canvas id="t1"></canvas></div></div>
+    <div>
+      <div class="stitle">El hallazgo más importante</div>
+      <table class="tbl" style="margin-top:8px">
+        <tr><th>Variable</th><th>Top 20%</th><th>Bottom 50%</th></tr>
+        <tr><td>GB total</td><td><b>$1.135B (82.3%)</b></td><td>$17.6M (1.3%)</td></tr>
+        <tr><td>MCR real</td><td><span class="badge badge-g">1.8%</span></td><td><span class="badge badge-r">22.6%</span></td></tr>
+        <tr><td>Con offers</td><td><b>52.0%</b></td><td>22.3%</td></tr>
+        <tr><td>Con ads</td><td><b>54.3%</b></td><td>18.8%</td></tr>
+        <tr><td><b>Con AutoAcc</b></td><td><b>2.4%</b></td><td>0.2%</td></tr>
+        <tr><td>Con POS</td><td>9.8%</td><td>11.7%</td></tr>
+      </table>
+      <div class="in a" style="margin-top:8px">POS casi igual entre top y bottom (9.8% vs 11.7%). Lo que diferencia al top NO es el POS — es AutoAccept (12×), Offers (2.3×) y Ads (2.9×).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboard" class="sec">
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">Mediana onboarding</div><div class="val">5 días</div><div class="dlta up">visible→primer pedido</div></div>
+    <div class="kpi"><div class="lbl">≤7 días</div><div class="val">58.5%</div><div class="dlta up">5.210 rests</div></div>
+    <div class="kpi"><div class="lbl">&gt;30 días</div><div class="val">14.8%</div><div class="dlta dn">1.322 rests</div></div>
+    <div class="kpi"><div class="lbl">Sin primer pedido</div><div class="val">532</div><div class="dlta dn">nunca activados</div></div>
+  </div>
+  <div class="crow">
+    <div><div class="stitle">Distribución onboarding (días)</div><div class="cw" style="height:200px"><canvas id="ob1"></canvas></div></div>
+    <div>
+      <table class="tbl" style="margin-top:24px">
+        <tr><th></th><th>≤7 días</th><th>&gt;7 días</th><th>&gt;30 días</th></tr>
+        <tr><td>Rests</td><td>5.210</td><td>3.695</td><td>1.322</td></tr>
+        <tr><td>Churn rate</td><td>6.3%</td><td>7.1%</td><td>7.8%</td></tr>
+        <tr><td>GB anual/rest</td><td><b>$202.610</b></td><td>$113.194</td><td>$100.699</td></tr>
+        <tr><td>Trips/año/rest</td><td><b>652</b></td><td>342</td><td>284</td></tr>
+        <tr><td>Meses activos</td><td><b>8.4</b></td><td>7.3</td><td>7.2</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="ins">
+    <div class="in a">Trigger crítico a los 7 días: los que arrancan rápido generan 1.8x más GB y 1.9x más trips durante todo el año.</div>
+    <div class="in w">El % que arranca en ≤7 días oscila entre 44% y 56% sin tendencia de mejora — el onboarding no mejoró sistemáticamente en 2024.</div>
+    <div class="in a">532 restaurants nunca tuvieron primer pedido — visibles en la app pero sin activar operacionalmente.</div>
+    <div class="in">Palanca: trigger automático a los 7 días sin primera orden para intervención proactiva del PSM.</div>
+  </div>
+</div>
+
+<!-- Q3 vs Q4 -->
+<div id="q3q4" class="sec">
+  <div class="cnote" style="margin-bottom:16px">Q3 = jul-ago-sep · Q4 = oct-nov-dic · Activos = GB>0 en al menos 1 mes · MCR, ROR, Rating ponderados por trips</div>
+  <div class="stitle">Volumen</div>
+  <table class="tbl">
+    <tr><th>Métrica</th><th>Q3</th><th>Q4</th><th>Δ nominal</th><th>Δ %</th><th>Señal</th></tr>
+    <tr><td>Restaurants activos</td><td>5.927</td><td><b>6.160</b></td><td>+233</td><td>+3.9%</td><td class="up">✅</td></tr>
+    <tr><td>GB total (3 meses)</td><td>$347.4M</td><td><b>$384.7M</b></td><td>+$37.3M</td><td>+10.7%</td><td class="up">✅</td></tr>
+    <tr><td>GB promedio/mes</td><td>$115.8M</td><td><b>$128.2M</b></td><td>+$12.4M</td><td>+10.7%</td><td class="up">✅</td></tr>
+    <tr><td>Trips totales</td><td>1.088.769</td><td><b>1.179.684</b></td><td>+90.915</td><td>+8.4%</td><td class="up">✅</td></tr>
+    <tr><td>Basket ponderado</td><td>$319</td><td><b>$326</b></td><td>+$7</td><td>+2.2%</td><td class="up">✅</td></tr>
+  </table>
+  <div class="stitle">Operacional</div>
+  <table class="tbl">
+    <tr><th>Métrica</th><th>Q3</th><th>Q4</th><th>Δ nominal</th><th>Δ %</th><th>Señal</th></tr>
+    <tr><td>MCR ponderado</td><td>2.26%</td><td><b>2.10%</b></td><td>−0.16pp</td><td>−7.1%</td><td class="up">✅</td></tr>
+    <tr><td>Unaccept rate</td><td>2.02%</td><td><b>1.74%</b></td><td>−0.28pp</td><td>−13.9%</td><td class="up">✅</td></tr>
+    <tr><td>Cancel rate</td><td>0.66%</td><td>0.71%</td><td>+0.05pp</td><td>+7.6%</td><td class="dn">🔴</td></tr>
+    <tr><td>ROR ponderado</td><td>96.2%</td><td>96.1%</td><td>−0.1pp</td><td>−0.1%</td><td class="dn">🔴</td></tr>
+    <tr><td>Rating ponderado</td><td>4.587</td><td>4.553</td><td>−0.034</td><td>−0.7%</td><td class="dn">🔴</td></tr>
+    <tr><td>Issues totales</td><td>42.933</td><td>47.298</td><td>+4.365</td><td>+10.2%</td><td class="dn">🔴</td></tr>
+    <tr><td>Issues/trip</td><td>3.9%</td><td>4.0%</td><td>+0.1pp</td><td>+1.7%</td><td class="dn">🔴</td></tr>
+  </table>
+  <div class="stitle">Monetización</div>
+  <table class="tbl">
+    <tr><th>Métrica</th><th>Q3</th><th>Q4</th><th>Δ nominal</th><th>Δ %</th><th>Señal</th></tr>
+    <tr><td>Ads penetration</td><td>23.1%</td><td><b>29.9%</b></td><td>+6.8pp</td><td>+29.5%</td><td class="up">✅</td></tr>
+    <tr><td>Offer trip rate</td><td>19.4%</td><td><b>23.2%</b></td><td>+3.8pp</td><td>+19.6%</td><td class="up">✅</td></tr>
+    <tr><td>% GB inorgánico</td><td>20.4%</td><td>23.9%</td><td>+3.6pp</td><td>+17.4%</td><td class="dn">🔴</td></tr>
+  </table>
+  <div class="stitle">Funnel</div>
+  <table class="tbl">
+    <tr><th>Métrica</th><th>Q3</th><th>Q4</th><th>Δ nominal</th><th>Δ %</th><th>Señal</th></tr>
+    <tr><td>Feed impression rate</td><td>3.42%</td><td>2.30%</td><td>−1.12pp</td><td>−32.7%</td><td class="dn">🔴</td></tr>
+    <tr><td>Menu-to-cart</td><td>20.21%</td><td>19.19%</td><td>−1.02pp</td><td>−5.0%</td><td class="dn">🔴</td></tr>
+    <tr><td>Cart-to-request</td><td>70.07%</td><td><b>70.42%</b></td><td>+0.35pp</td><td>+0.5%</td><td class="up">✅</td></tr>
+  </table>
+  <div class="ins">
+    <div class="in g">GB +10.7%, Trips +8.4%, Basket +$7. Q4 es el mejor trimestre del año.</div>
+    <div class="in g">MCR baja 2.26%→2.10%, unaccept −13.9%. Mejora operacional real.</div>
+    <div class="in a">Issues crecen +10.2% vs trips +8.4%. Calidad per trip sigue deteriorándose.</div>
+    <div class="in">Ads pen explota +6.8pp (+29.5%) — el mayor movimiento positivo del trimestre.</div>
+  </div>
+</div>
+
+<!-- CLUSTERS Q4 -->
+<div id="clusters" class="sec">
+  <div class="cnote" style="margin-bottom:16px">Clusters Q4 · p50=$20.509 · p80=$98.603 · Core en riesgo = GB≥p80 y MCR>5% · Suma exacta: 9.437 restaurants</div>
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">Core</div><div class="val">1.096</div><div class="dlta up">65.4% GB · MCR 1.0%</div></div>
+    <div class="kpi"><div class="lbl">Core en riesgo</div><div class="val">70</div><div class="dlta dn">2.8% GB · MCR 8.3%</div></div>
+    <div class="kpi"><div class="lbl">Mid con potencial</div><div class="val">1.577</div><div class="dlta mu">20.6% GB · MCR 3.8%</div></div>
+    <div class="kpi"><div class="lbl">Early Stage crítico</div><div class="val">1.565</div><div class="dlta wn">7.8% GB · MCR 3.7%</div></div>
+    <div class="kpi"><div class="lbl">Long tail pasivo</div><div class="val">1.852</div><div class="dlta dn">3.4% GB · MCR 9.2%</div></div>
+    <div class="kpi"><div class="lbl">Inactivo</div><div class="val">3.277</div><div class="dlta dn">34.7% del portafolio</div></div>
+  </div>
+  <div class="crow">
+    <div><div class="stitle">GB Q4 por cluster ($M)</div><div class="cw" style="height:200px"><canvas id="cl1"></canvas></div></div>
+    <div><div class="stitle">MCR ponderado por cluster (%)</div><div class="cw" style="height:200px"><canvas id="cl2"></canvas></div></div>
+  </div>
+  <div class="stitle">Métricas completas por cluster</div>
+  <table class="tbl">
+    <tr><th>Cluster</th><th>Rests</th><th>GB Q4</th><th>GB/rest/mes</th><th>MCR pond.</th><th>Unaccept</th><th>ROR</th><th>Rating</th><th>Offers</th><th>Ads</th><th>POS</th><th>AutoAcc</th><th>C2R</th></tr>
+    <tr><td><b>Core</b></td><td>1.096</td><td>$251.6M</td><td>$76.521</td><td><span class="badge badge-g">1.0%</span></td><td>0.7%</td><td>96.6%</td><td>4.56</td><td>44.8%</td><td>48.7%</td><td>10.9%</td><td>3.2%</td><td>73.2%</td></tr>
+    <tr><td><b>Core riesgo</b></td><td>70</td><td>$10.9M</td><td>$52.125</td><td><span class="badge badge-r">8.3%</span></td><td>5.5%</td><td>92.3%</td><td>4.45</td><td>42.9%</td><td>37.1%</td><td>2.9%</td><td>1.4%</td><td>69.8%</td></tr>
+    <tr><td><b>Mid</b></td><td>1.577</td><td>$79.2M</td><td>$16.731</td><td><span class="badge badge-a">3.8%</span></td><td>2.7%</td><td>94.9%</td><td>4.51</td><td>35.8%</td><td>30.7%</td><td>8.6%</td><td>0.9%</td><td>67.6%</td></tr>
+    <tr><td><b>Early Stage</b></td><td>1.565</td><td>$30.0M</td><td>$6.385</td><td><span class="badge badge-a">3.7%</span></td><td>2.8%</td><td>90.1%</td><td>4.46</td><td>32.1%</td><td>31.9%</td><td>6.4%</td><td>0.3%</td><td>65.5%</td></tr>
+    <tr><td><b>Long tail</b></td><td>1.852</td><td>$13.0M</td><td>$2.336</td><td><span class="badge badge-r">9.2%</span></td><td>7.8%</td><td>93.8%</td><td>4.21</td><td>20.8%</td><td>16.1%</td><td>20.1%</td><td>0.4%</td><td>59.1%</td></tr>
+    <tr><td><b>Inactivo</b></td><td>3.277</td><td>$0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+  </table>
+  <div class="ins">
+    <div class="in g">Core (1.096 rests) genera 65.4% del GB con MCR 1.0%. AutoAcc 3.2% — headroom disponible.</div>
+    <div class="in a">Core en riesgo: 70 rests con MCR 8.3% y POS apenas 2.9%. AutoAccept es la intervención inmediata.</div>
+    <div class="in">Mid (1.577): $16.7K/mes. Offers 35.8% y Ads 30.7% — headroom real de monetización.</div>
+    <div class="in w">Long tail: POS 20.1% (el más alto) pero MCR 9.2% y rating 4.21 (el más bajo). POS no compensa el volumen.</div>
+  </div>
+</div>
+
+<!-- FOTO Q4 -->
+<div id="fotoq4" class="sec">
+  <div class="cnote" style="margin-bottom:16px">Estado actual · promedio mensual oct-nov-dic 2024 · 6.160 restaurants activos · Base del plan</div>
+  <div class="kgrid">
+    <div class="kpi"><div class="lbl">GB promedio/mes</div><div class="val">$128.2M</div><div class="dlta up">vs $115.8M en Q3</div></div>
+    <div class="kpi"><div class="lbl">Trips promedio/mes</div><div class="val">393.228</div><div class="dlta up">vs 362.923 en Q3</div></div>
+    <div class="kpi"><div class="lbl">Basket</div><div class="val">$326</div><div class="dlta up">vs $319 en Q3</div></div>
+    <div class="kpi"><div class="lbl">MCR ponderado</div><div class="val">2.10%</div><div class="dlta up">vs 2.26% en Q3</div></div>
+    <div class="kpi"><div class="lbl">Ads penetration</div><div class="val">29.9%</div><div class="dlta up">+6.8pp vs Q3</div></div>
+    <div class="kpi"><div class="lbl">AutoAccept</div><div class="val">1.0%</div><div class="dlta dn">63 rests — headroom máximo</div></div>
+  </div>
+  <div class="crow">
+    <div>
+      <div class="stitle">Por Lifecycle — Q4</div>
+      <table class="tbl">
+        <tr><th>Lifecycle</th><th>Rests</th><th>% GB</th><th>MCR pond.</th><th>MCR real</th><th>POS</th><th>AutoAcc</th></tr>
+        <tr><td>ELC</td><td>696</td><td>1.7%</td><td>2.91%</td><td>3.25%</td><td>4.2%</td><td>0.1%</td></tr>
+        <tr><td>Early Mature</td><td>869</td><td>6.1%</td><td><span class="badge badge-r">3.37%</span></td><td>3.82%</td><td>8.2%</td><td>0.5%</td></tr>
+        <tr><td><b>Mature</b></td><td><b>4.595</b></td><td><b>92.2%</b></td><td><span class="badge badge-g"><b>2.13%</b></span></td><td>2.28%</td><td>13.7%</td><td>1.3%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="stitle">Por Ciudad — Q4</div>
+      <table class="tbl">
+        <tr><th>Ciudad</th><th>% GB</th><th>MCR pond.</th><th>Basket</th></tr>
+        <tr><td>Tigre</td><td>27.2%</td><td>2.00%</td><td>$360</td></tr>
+        <tr><td>La Plata</td><td>19.5%</td><td>2.18%</td><td>$314</td></tr>
+        <tr><td>Bernal</td><td>15.9%</td><td>2.41%</td><td>$312</td></tr>
+        <tr><td>San Isidro</td><td>12.1%</td><td>2.53%</td><td>$317</td></tr>
+        <tr><td>Quilmes</td><td>11.2%</td><td>2.03%</td><td>$287</td></tr>
+        <tr><td><b>Lomas</b></td><td>8.1%</td><td><span class="badge badge-g">1.85%</span></td><td><b>$365</b></td></tr>
+        <tr><td>Avellaneda</td><td>6.0%</td><td><span class="badge badge-r">2.86%</span></td><td>$325</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="crow">
+    <div><div class="stitle">MCR Buckets Q4</div><div class="cw" style="height:180px"><canvas id="fq1"></canvas></div></div>
+    <div><div class="stitle">Pareto Q4 — curva de concentración</div><div class="cw" style="height:180px"><canvas id="fq2"></canvas></div></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const MO=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const GB=[93.1,103.4,98.8,108.9,121.9,119.8,112.0,116.0,119.4,116.6,130.7,137.4];
+const TR=[308,337,320,356,390,375,352,364,373,365,404,411];
+const MCR_W=[2.47,2.31,2.72,2.64,2.35,2.22,2.47,2.19,2.11,2.18,2.01,2.11];
+const RAT=[4.639,4.648,4.628,4.629,4.612,4.631,4.612,4.602,4.548,4.558,4.560,4.541];
+const OR=[17.2,16.6,18.1,19.1,18.8,18.2,17.9,19.9,20.3,22.3,23.7,23.4];
+const ROI=[3.25,3.15,3.19,3.14,3.48,3.26,3.06,3.54,3.38,3.32,3.44,3.93];
+const PINO=[18.7,18.1,19.3,20.4,20.0,19.4,19.1,20.8,21.2,23.1,24.6,24.0];
+const ORG=[77.1,86.2,80.9,88.1,99.0,98.0,92.0,92.9,95.2,90.6,99.7,105.1];
+const INO=[16.0,17.2,17.9,20.8,22.9,21.8,20.0,23.1,24.2,26.0,31.0,32.3];
+const ACTIV=[279,262,250,219,218,210,223,200,206,303,316,220];
+const B='#1a56db',G='#0d9e6e',R='#d63a2f',A='#b45309',GR='#6b6b65';
+const BL='rgba(26,86,219,.12)',RL='rgba(214,58,47,.12)',GL='rgba(13,158,110,.12)';
+const rendered={};
+
+const bo=(extra={})=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10.5},color:GR},grid:{display:false}},y:{ticks:{font:{size:10.5},color:GR},grid:{color:'rgba(0,0,0,0.05)'}},...extra}});
+const du=(yE={},y1E={})=>({...bo(),scales:{x:{ticks:{font:{size:10.5},color:GR},grid:{display:false}},y:{ticks:{font:{size:10.5},color:GR},grid:{color:'rgba(0,0,0,0.05)'},...yE},y1:{type:'linear',position:'right',ticks:{font:{size:10.5},color:GR},grid:{display:false},...y1E}}});
+
+function mk(id,type,data,opts){
+  const el=document.getElementById(id);
+  if(!el||rendered['_'+id])return;
+  rendered['_'+id]=true;
+  try{new Chart(el,{type,data,options:opts||bo()});}catch(e){}
+}
+
+function show(id,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  render(id);
+}
+
+function render(id){
+  if(rendered[id])return; rendered[id]=true;
+
+  if(id==='macro'){
+    mk('m1','bar',{labels:MO,datasets:[{data:GB,backgroundColor:B,yAxisID:'y'},{type:'line',data:TR,borderColor:G,backgroundColor:'transparent',pointRadius:2,borderWidth:2,yAxisID:'y1'}]},du());
+    mk('m2','line',{labels:MO,datasets:[{data:MCR_W,borderColor:R,backgroundColor:RL,fill:true,pointRadius:2,borderWidth:2,yAxisID:'y'},{data:RAT,borderColor:B,backgroundColor:'transparent',pointRadius:2,borderDash:[4,3],borderWidth:2,yAxisID:'y1'}]},du({min:1.5,max:3},{min:4.4,max:4.75}));
+  }
+  if(id==='zona'){
+    // no charts needed — pure tables
+  }
+  if(id==='mon'){
+    mk('roi1','bar',{labels:MO,datasets:[{label:'ROI',data:ROI,backgroundColor:G,yAxisID:'y',borderRadius:3},{type:'line',label:'%inorg',data:PINO,borderColor:R,backgroundColor:'transparent',pointRadius:2,borderWidth:2,yAxisID:'y1'}]},du({min:2.5,max:4.5},{min:15,max:27}));
+  }
+  if(id==='ops'){
+    mk('op1','bar',{labels:['Sin POS\nUnaccept','Sin POS\nCancel','Con POS\nUnaccept','Con POS\nCancel','Sin AA\nUnaccept','Con AA\nUnaccept'],datasets:[{data:[2.39,0.67,0.73,0.67,2.27,0.59],backgroundColor:[R,A,G,A,R,G],borderRadius:3}]},bo());
+    mk('op2','bar',{labels:['<5%','5-10%','10-20%','20-30%','>30%'],datasets:[{data:[81.8,9.1,4.9,1.4,1.1],backgroundColor:[G,B,A,A,R],borderRadius:3}]},bo());
+  }
+  if(id==='cal'){
+    // tables only
+  }
+  if(id==='org'){
+    mk('og1','bar',{labels:MO,datasets:[{label:'Org',data:ORG,backgroundColor:B,stack:'s'},{label:'Inorg',data:INO,backgroundColor:R,stack:'s'}]},{...bo(),scales:{x:{stacked:true,ticks:{font:{size:10.5},color:GR},grid:{display:false}},y:{stacked:true,ticks:{font:{size:10.5},color:GR},grid:{color:'rgba(0,0,0,0.05)'}}}});
+    mk('og2','line',{labels:MO,datasets:[{label:'ROI',data:ROI,borderColor:G,backgroundColor:'transparent',pointRadius:2,borderWidth:2,yAxisID:'y'},{label:'%inorg',data:PINO,borderColor:R,backgroundColor:RL,fill:true,pointRadius:2,borderDash:[4,3],borderWidth:2,yAxisID:'y1'}]},du({min:2.5,max:4.5},{min:15,max:27}));
+  }
+  if(id==='par'){
+    mk('pa1','line',{labels:['10%','20%','30%','40%','50%','60%','70%','80%','90%','100%'],datasets:[{data:[61.4,82.3,92.0,96.2,98.7,99.7,99.9,100,100,100],borderColor:B,backgroundColor:BL,fill:true,pointRadius:3,borderWidth:2},{data:[10,20,30,40,50,60,70,80,90,100],borderColor:'rgba(0,0,0,.15)',backgroundColor:'transparent',borderDash:[5,5],pointRadius:0}]},bo());
+    mk('pa2','bar',{labels:['1 mes','2-3m','4-6m','7-11m','12 meses'],datasets:[{data:[0.1,1.1,2.5,37.9,58.3],backgroundColor:[R,R,A,B,G],borderRadius:4}]},bo());
+  }
+  if(id==='coh'){
+    // tables only
+  }
+  if(id==='corr'){
+    mk('cr1','bar',{labels:['MCR','Ads pen','Offers pen','Basket','Prep time','ROR','Rating','Photo','Desc'],datasets:[{data:[-0.270,0.196,0.167,0.175,0.178,0.134,0.098,0.025,0.008],backgroundColor:[-0.270,0.196,0.167,0.175,0.178,0.134,0.098,0.025,0.008].map(v=>v<-0.1?R:v>0.1?G:GR),borderRadius:4}]},bo());
+    mk('cr2','bar',{labels:['n_request','n_cart','n_menu','n_feed','n_visible','menu→cart','cart→req','feed→menu'],datasets:[{data:[0.945,0.938,0.879,0.837,0.498,0.460,0.255,-0.010],backgroundColor:[0.945,0.938,0.879,0.837,0.498,0.460,0.255,-0.010].map(v=>v>0.5?G:v>0.15?B:v>0?GR:R),borderRadius:4}]},bo());
+  }
+  if(id==='est'){
+    // table only
+  }
+  if(id==='churn'){
+    mk('ch1','bar',{labels:['1m','2-3m','4-6m','7-11m','12m'],datasets:[{data:[1121,1430,1115,2425,2337],backgroundColor:[R,R,A,B,G],borderRadius:4}]},bo());
+    mk('ch2','bar',{labels:['1m','2-3m','4-6m','7-11m','12m'],datasets:[{data:[0.1,1.1,2.5,37.9,58.3],backgroundColor:[R,R,A,B,G],borderRadius:4}]},bo());
+  }
+  if(id==='cuis'){
+    const CU=['Empanadas','Argentina','Steak/Grill','Sushi','Burger','Desserts','Pizza','Coffee&Tea','Wings','Tortas','Healthy','Chinese'];
+    const MCR=[2.2,2.4,2.2,2.1,2.2,3.1,2.1,2.9,2.6,1.9,1.7,1.0];
+    const ADSP=[15.3,16.2,20.6,26.7,19.1,12.0,16.9,17.8,13.9,13.0,21.4,17.2];
+    mk('cu1','bar',{labels:CU,datasets:[{data:MCR,backgroundColor:MCR.map(v=>v>2.7?R:v>2.2?A:G),borderRadius:3}]},{...bo(),indexAxis:'y'});
+    mk('cu2','bar',{labels:CU,datasets:[{data:ADSP,backgroundColor:ADSP.map(v=>v>24?G:v<14?R:B),borderRadius:3}]},{...bo(),indexAxis:'y'});
+  }
+  if(id==='combos'){
+    mk('cb1','bar',{labels:['Sin POS+Sin AA','Con POS+Sin AA','Sin POS+Con AA','Con POS+Con AA'],datasets:[{data:[3.1,1.4,1.1,0.8],backgroundColor:[R,A,G,G],borderRadius:4}]},bo());
+  }
+  if(id==='monet2'){
+    mk('ao1','bar',{labels:['Sin offers+Sin ads','Con offers+Sin ads','Sin offers+Con ads','Con offers+Con ads'],datasets:[{label:'% GB',data:[29.4,16.6,17.1,36.9],backgroundColor:[R,A,B,G],yAxisID:'y',borderRadius:3},{type:'line',label:'MCR real',data:[3.07,2.45,1.67,1.91],borderColor:GR,backgroundColor:'transparent',pointRadius:5,borderWidth:2,yAxisID:'y1'}]},du({},{min:0,max:5}));
+  }
+  if(id==='top20'){
+    mk('t1','bar',{labels:['MCR real %','Con offers %','Con ads %','Con AutoAcc %','Con POS %'],datasets:[{label:'Top 20%',data:[1.8,52.0,54.3,2.4,9.8],backgroundColor:G,borderRadius:3},{label:'Bottom 50%',data:[22.6,22.3,18.8,0.2,11.7],backgroundColor:R,borderRadius:3}]},bo());
+  }
+  if(id==='onboard'){
+    mk('ob1','bar',{labels:['0d','1-7d','8-30d','31-90d','>90d','Sin pedido'],datasets:[{data:[1439,3771,1370,871,451,532],backgroundColor:[G,G,B,A,R,R],borderRadius:3}]},bo());
+  }
+  if(id==='clusters'){
+    const CL=['Core','Core riesgo','Mid','Early Stage','Long tail'];
+    const CL_GB=[251.6,10.9,79.2,30.0,13.0];
+    const CL_MCR=[1.0,8.3,3.8,3.7,9.2];
+    mk('cl1','bar',{labels:CL,datasets:[{data:CL_GB,backgroundColor:[G,R,B,A,R],borderRadius:4}]},bo());
+    mk('cl2','bar',{labels:CL,datasets:[{data:CL_MCR,backgroundColor:CL_MCR.map(v=>v>7?R:v>3?A:G),borderRadius:4}]},bo());
+  }
+  if(id==='fotoq4'){
+    mk('fq1','bar',{labels:['<5%','5-10%','10-20%','20-30%','>30%'],datasets:[{data:[2460,751,554,296,393],backgroundColor:[G,B,A,A,R],borderRadius:4}]},bo());
+    mk('fq2','line',{labels:['10%','20%','30%','40%','50%','60%','70%','80%','90%','100%'],datasets:[{data:[50.4,71.5,83.7,90.5,95.3,98.1,99.4,99.9,100,100],borderColor:B,backgroundColor:BL,fill:true,pointRadius:3,borderWidth:2},{data:[10,20,30,40,50,60,70,80,90,100],borderColor:'rgba(0,0,0,.15)',backgroundColor:'transparent',borderDash:[5,5],pointRadius:0}]},bo());
+  }
+}
+
+render('macro');
+</script>
+</body>
+</html>
